@@ -64,12 +64,6 @@ public class AndroidUploadStore extends Task {
 
             String playStoreCertLocation = String.format("%s/%s", buildEnvironment.getCredentialsPath(), playStoreCert);
 
-            String scheme = buildEnvironment.getProperty(BUILD_PROP_SCHEME);
-            String appBinaryPath = String.format("%s/app/build/outputs/apk/%s/app-%s.apk",
-                    buildEnvironment.getProjectPath(), scheme.toLowerCase(), scheme.toLowerCase());
-
-            LOGGER.warn("AndroidUploadStore: uploading "+appBinaryPath);
-
 
             // Create the API service.
             AndroidPublisher service = AndroidPublisherHelper.init(packageName, playStoreEmail, playStoreCertLocation);
@@ -81,14 +75,20 @@ public class AndroidUploadStore extends Task {
             final String editId = edit.getId();
             LOGGER.info("AndroidUploadStore: Created edit with id: {}", editId);
 
-            final AbstractInputStreamContent apkFile = new FileContent(AndroidPublisherHelper.MIME_TYPE_APK, new File(appBinaryPath));
+            Collection<File> files = Util.findAllByExtension(new File(buildEnvironment.getProjectPath()), ".apk");
+            if(files.size() > 1) {
+                throw new RuntimeException("Not set up to discern which is the correct apk");
+            }
+
+            File rawFile = files.iterator().next();
+
+            final AbstractInputStreamContent apkFile = new FileContent(AndroidPublisherHelper.MIME_TYPE_APK, rawFile);
             AndroidPublisher.Edits.Apks.Upload uploadRequest = edits
                     .apks()
                     .upload(packageName, editId, apkFile);
 
             Apk apk = uploadRequest.execute();
             LOGGER.info("AndroidUploadStore: Version code {} has been uploaded", apk.getVersionCode());
-
 
             // Assign apk to alpha track.
             List<Long> apkVersionCodes = new ArrayList<Long>();
