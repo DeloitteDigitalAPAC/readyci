@@ -9,13 +9,17 @@ import com.squarepolka.readyci.taskrunner.BuildEnvironment;
 import com.squarepolka.readyci.taskrunner.TaskFailedException;
 import com.squarepolka.readyci.tasks.Task;
 import com.squarepolka.readyci.util.android.AndroidPublisherHelper;
+import com.squarepolka.readyci.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import net.dongliu.apk.parser.ApkFile;
+import net.dongliu.apk.parser.bean.ApkMeta;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 
 import static com.squarepolka.readyci.configuration.AndroidPropConstants.*;
@@ -38,7 +42,6 @@ public class AndroidUploadStore extends Task {
         try {
 
             String deployTrack = buildEnvironment.getProperty(BUILD_PROP_DEPLOY_TRACK, "");
-            String packageName = buildEnvironment.getProperty(BUILD_PROP_PACKAGE_NAME, "");
             String playStoreEmail = buildEnvironment.getProperty(BUILD_PROP_SERVICE_ACCOUNT_EMAIL, "");
             String playStoreCert = buildEnvironment.getProperty(BUILD_PROP_SERVICE_ACCOUNT_FILE, "");
 
@@ -81,11 +84,12 @@ public class AndroidUploadStore extends Task {
             }
 
             File rawFile = files.iterator().next();
+            ApkMeta apkMetadata = new ApkFile(rawFile).getApkMeta();
 
             final AbstractInputStreamContent apkFile = new FileContent(AndroidPublisherHelper.MIME_TYPE_APK, rawFile);
             AndroidPublisher.Edits.Apks.Upload uploadRequest = edits
                     .apks()
-                    .upload(packageName, editId, apkFile);
+                    .upload(apkMetadata.getPackageName(), editId, apkFile);
 
             Apk apk = uploadRequest.execute();
             LOGGER.info("AndroidUploadStore: Version code {} has been uploaded", apk.getVersionCode());

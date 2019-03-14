@@ -8,7 +8,6 @@ public class AndroidPropConstants {
 
     public static final String BUILD_PROP_SCHEME = "scheme";
     public static final String BUILD_PROP_DEPLOY_TRACK = "deployTrack";
-    public static final String BUILD_PROP_PACKAGE_NAME = "packageName";
     public static final String BUILD_PROP_SERVICE_ACCOUNT_FILE = "playStoreAuthCert";
     public static final String BUILD_PROP_SERVICE_ACCOUNT_EMAIL = "playStoreEmail";
     public static final String BUILD_PROP_JAVA_KEYSTORE_PATH = "javaKeystorePath";
