@@ -78,12 +78,24 @@ public class AndroidUploadStore extends Task {
             final String editId = edit.getId();
             LOGGER.info("AndroidUploadStore: Created edit with id: {}", editId);
 
-            Collection<File> files = Util.findAllByExtension(new File(buildEnvironment.getProjectPath()), ".apk");
-            if(files.size() > 1) {
-                throw new RuntimeException("Not set up to discern which is the correct apk");
+            Collection<File> unfilteredApks = Util.findAllByExtension(new File(buildEnvironment.getProjectPath()), ".apk");
+            List<File> filteredApks = new ArrayList<File>();
+            for(File apk : unfilteredApks) {
+                if(!absolutePath.contains("build/outputs") || 
+                    absolutePath.endsWith("aligned.apk") || 
+                    absolutePath.endsWith("signed.apk") || 
+                    absolutePath.endsWith("uninstrumented.apk")) {
+                    continue;
+                }
+
+                filteredApks.add(apk);
             }
 
-            File rawFile = files.iterator().next();
+            if(filteredApks.size() != 1) {
+                throw new RuntimeException("Either there's no APK, or too many APKs");
+            }
+
+            File rawFile = filteredApks.get(0);
             ApkMeta apkMetadata = new ApkFile(rawFile).getApkMeta();
 
             final AbstractInputStreamContent apkFile = new FileContent(AndroidPublisherHelper.MIME_TYPE_APK, rawFile);
