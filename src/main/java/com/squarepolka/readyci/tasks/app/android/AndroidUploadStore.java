@@ -105,13 +105,9 @@ public class AndroidUploadStore extends Task {
                             new Track().setReleases(
                                     Collections.singletonList(
                                             new TrackRelease()
-                                                    .setName("Alpha Release")
+                                                    .setName(apkMetadata.getVersionName())
                                                     .setVersionCodes(apkVersionCodes)
-                                                    .setStatus("completed")
-                                                    .setReleaseNotes(Collections.singletonList(
-                                                            new LocalizedText()
-                                                                    .setLanguage("en-AU")
-                                                                    .setText("This is an alpha release"))))));
+                                                    .setStatus("completed"))));
             Track updatedTrack = updateTrackRequest.execute();
             LOGGER.info("AndroidUploadStore: Track {} has been updated.", updatedTrack.getTrack());
 
