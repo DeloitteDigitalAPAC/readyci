@@ -15,12 +15,20 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import net.dongliu.apk.parser.ApkFile;
 import net.dongliu.apk.parser.bean.ApkMeta;
+import net.dongliu.apk.parser.bean.ApkSignStatus;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Collection;
 import java.util.List;
+
+import java.io.StringReader;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.InputSource;
 
 import static com.squarepolka.readyci.configuration.AndroidPropConstants.*;
 
@@ -46,7 +54,6 @@ public class AndroidUploadStore extends Task {
             String playStoreCert = buildEnvironment.getProperty(BUILD_PROP_SERVICE_ACCOUNT_FILE, "");
 
             if (deployTrack.isEmpty() ||
-                    packageName.isEmpty() ||
                     playStoreEmail.isEmpty() ||
                     playStoreCert.isEmpty()) {
 
@@ -55,8 +62,6 @@ public class AndroidUploadStore extends Task {
                 sb.append("AndroidUploadStore: Missing vital details for play store deployment:");
                 if(deployTrack.isEmpty())
                     sb.append("\n- deployTrack is required");
-                if(packageName.isEmpty())
-                    sb.append("\n- packageName is required");
                 if(playStoreEmail.isEmpty())
                     sb.append("\n- playStoreEmail is required");
                 if(playStoreCert.isEmpty())
@@ -67,36 +72,59 @@ public class AndroidUploadStore extends Task {
 
             String playStoreCertLocation = String.format("%s/%s", buildEnvironment.getCredentialsPath(), playStoreCert);
 
-
-            // Create the API service.
-            AndroidPublisher service = AndroidPublisherHelper.init(packageName, playStoreEmail, playStoreCertLocation);
-            final AndroidPublisher.Edits edits = service.edits();
-
-            // Create a new edit to make changes to your listing.
-            AndroidPublisher.Edits.Insert editRequest = edits.insert(packageName, null);
-            AppEdit edit = editRequest.execute();
-            final String editId = edit.getId();
-            LOGGER.info("AndroidUploadStore: Created edit with id: {}", editId);
-
             Collection<File> unfilteredApks = Util.findAllByExtension(new File(buildEnvironment.getProjectPath()), ".apk");
             List<File> filteredApks = new ArrayList<File>();
-            for(File apk : unfilteredApks) {
+            for(File file : unfilteredApks) {
+                String absolutePath = file.getAbsolutePath();
+                // filter based on known-bad path
                 if(!absolutePath.contains("build/outputs") || 
                     absolutePath.endsWith("aligned.apk") || 
                     absolutePath.endsWith("signed.apk") || 
                     absolutePath.endsWith("uninstrumented.apk")) {
+
+                    LOGGER.info("Filtering out apk with known-bad file path: " + absolutePath);
+
                     continue;
                 }
 
-                filteredApks.add(apk);
+                ApkFile apk = new ApkFile(file);
+
+                // filter out unsigned apks
+                ApkSignStatus signStatus = apk.verifyApk();
+                if(signStatus != ApkSignStatus.signed) {
+                    LOGGER.info("Filtering out unsigned apk: " + absolutePath);
+                    continue;
+                }
+
+                // filter out debuggable apks
+                InputSource is = new InputSource(new StringReader(apk.getManifestXml()));
+                Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(is);
+                String debuggable = ((Element)doc.getElementsByTagName("application").item(0)).getAttribute("android:debuggable");
+                if(debuggable != null && Boolean.valueOf(debuggable)) {
+                    LOGGER.info("Filtering out debuggable apk: " + absolutePath);
+                    continue;
+                }
+
+                filteredApks.add(file);
             }
 
             if(filteredApks.size() != 1) {
-                throw new RuntimeException("Either there's no APK, or too many APKs");
+                throw new RuntimeException("Either there's no valid APK, or too many valid APKs");
             }
 
             File rawFile = filteredApks.get(0);
             ApkMeta apkMetadata = new ApkFile(rawFile).getApkMeta();
+
+
+            // Create the API service.
+            AndroidPublisher service = AndroidPublisherHelper.init(apkMetadata.getPackageName(), playStoreEmail, playStoreCertLocation);
+            final AndroidPublisher.Edits edits = service.edits();
+
+            // Create a new edit to make changes to your listing.
+            AndroidPublisher.Edits.Insert editRequest = edits.insert(apkMetadata.getPackageName(), null);
+            AppEdit edit = editRequest.execute();
+            final String editId = edit.getId();
+            LOGGER.info("AndroidUploadStore: Created edit with id: {}", editId);
 
             final AbstractInputStreamContent apkFile = new FileContent(AndroidPublisherHelper.MIME_TYPE_APK, rawFile);
             AndroidPublisher.Edits.Apks.Upload uploadRequest = edits
@@ -111,7 +139,7 @@ public class AndroidUploadStore extends Task {
             apkVersionCodes.add(Long.valueOf(apk.getVersionCode()));
             AndroidPublisher.Edits.Tracks.Update updateTrackRequest = edits
                     .tracks()
-                    .update(packageName,
+                    .update(apkMetadata.getPackageName(),
                             editId,
                             deployTrack,
                             new Track().setReleases(
@@ -125,7 +153,7 @@ public class AndroidUploadStore extends Task {
 
 
             // Commit changes for edit.
-            AndroidPublisher.Edits.Commit commitRequest = edits.commit(packageName, editId);
+            AndroidPublisher.Edits.Commit commitRequest = edits.commit(apkMetadata.getPackageName(), editId);
             AppEdit appEdit = commitRequest.execute();
             LOGGER.info("AndroidUploadStore: App edit with id {} has been committed", appEdit.getId());
 
