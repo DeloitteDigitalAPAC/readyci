@@ -30,7 +30,6 @@ public class AndroidUploadHockeyapp extends Task {
 
     @Override
     public void performTask(BuildEnvironment buildEnvironment) {
-      
         String hockappToken = buildEnvironment.getProperty(BUILD_PROP_HOCKEYAPP_TOKEN);
         String releaseTags = buildEnvironment.getProperty(BUILD_PROP_HOCKEYAPP_RELEASE_TAGS, "");
         String releaseNotes = buildEnvironment.getProperty(BUILD_PROP_HOCKEYAPP_RELEASE_NOTES, "");
@@ -38,22 +37,31 @@ public class AndroidUploadHockeyapp extends Task {
         // upload all the apk builds that it finds
         Collection<File> files = Util.findAllByExtension(new File(buildEnvironment.getProjectPath()), ".apk");
         for (File apk : files) {
-            LOGGER.warn("uploading "+ apk.getAbsolutePath());
-            if(apk.getAbsolutePath().contains("build")) {
-                // Upload to HockeyApp
-                executeCommand(new String[]{"/usr/bin/curl",
-                        "https://rink.hockeyapp.net/api/2/apps/upload",
-                        "-H", "X-HockeyAppToken: " + hockappToken,
-                        "-F", "ipa=@" + apk.getAbsolutePath(),
-                        "-F", "notes=" + releaseNotes,
-                        "-F", "tags=" + releaseTags,
-                        "-F", "notes_type=0",               // Textual release notes
-                        "-F", "status=2",                   // Make this version available for download
-                        "-F", "notify=1",                   // Notify users who can install the app
-                        "-F", "strategy=add",               // Add the build if one with the same build number exists
-                        "-F", "mandatory=1"                 // Download is mandatory
-                }, buildEnvironment.getProjectPath());
+            String absolutPath = apk.getAbsolutePath();
+
+            // Filtering out known bad APKs
+            if(!absolutePath.contains("build/outputs") || 
+                absolutePath.endsWith("zipaligned.apk") || 
+                absolutePath.endsWith("signed.apk") || 
+                absolutePath.endsWith("uninstrumented.apk")) {
+                continue;
             }
+
+            LOGGER.warn("uploading "+ absolutePath);
+
+            // Upload to HockeyApp
+            executeCommand(new String[]{"/usr/bin/curl",
+                    "https://rink.hockeyapp.net/api/2/apps/upload",
+                    "-H", "X-HockeyAppToken: " + hockappToken,
+                    "-F", "ipa=@" + absolutePath,
+                    "-F", "notes=" + releaseNotes,
+                    "-F", "tags=" + releaseTags,
+                    "-F", "notes_type=0",               // Textual release notes
+                    "-F", "status=2",                   // Make this version available for download
+                    "-F", "notify=1",                   // Notify users who can install the app
+                    "-F", "strategy=add",               // Add the build if one with the same build number exists
+                    "-F", "mandatory=1"                 // Download is mandatory
+            }, buildEnvironment.getProjectPath());
         }
     }
 
