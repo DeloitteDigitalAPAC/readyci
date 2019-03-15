@@ -27,6 +27,8 @@ class AndroidUploadHockeyapp : Task() {
         val hockappToken = buildEnvironment.getProperty(AndroidPropConstants.BUILD_PROP_HOCKEYAPP_TOKEN)
         val releaseTags = buildEnvironment.getProperty(AndroidPropConstants.BUILD_PROP_HOCKEYAPP_RELEASE_TAGS, "")
         val releaseNotes = buildEnvironment.getProperty(AndroidPropConstants.BUILD_PROP_HOCKEYAPP_RELEASE_NOTES, "")
+        val filenameFilters = buildEnvironment.getProperties(AndroidPropConstants.BUILD_PROP_FILENAME_FILTERS,
+                listOf("zipaligned", "unsigned"))
 
         if(hockappToken == null) {
             throw RuntimeException("AndroidUploadStore: Missing vital details for play store deployment:\n- hockappToken is required")
@@ -34,7 +36,7 @@ class AndroidUploadHockeyapp : Task() {
 
         val filteredApks = AndroidUtil.findAllApkOutputs(buildEnvironment.projectPath)
                 .filter { file ->
-                    arrayOf("aligned", "signed", "instrumented").none { file.nameWithoutExtension.endsWith(it) }
+                    filenameFilters.none { file.nameWithoutExtension.contains(it) }
                 }
                 .map { Pair(it, ApkFile(it)) }
                 .filter { it.second.isSigned }

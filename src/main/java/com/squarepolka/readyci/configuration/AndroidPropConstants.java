@@ -18,5 +18,6 @@ public class AndroidPropConstants {
     public static final String BUILD_PROP_HOCKEYAPP_TOKEN = "hockappToken";
     public static final String BUILD_PROP_HOCKEYAPP_RELEASE_TAGS = "hockeyappReleaseTags";
     public static final String BUILD_PROP_HOCKEYAPP_RELEASE_NOTES = "hockeyappReleaseNotes";
+    public static final String BUILD_PROP_FILENAME_FILTERS = "fileNameFilters";
 
 }

@@ -2,6 +2,7 @@ package com.squarepolka.readyci.tasks.app.android
 
 import com.google.api.client.http.FileContent
 import com.google.api.services.androidpublisher.model.*
+import com.squarepolka.readyci.configuration.AndroidPropConstants
 import com.squarepolka.readyci.configuration.ReadyCIConfiguration
 import com.squarepolka.readyci.taskrunner.BuildEnvironment
 import com.squarepolka.readyci.taskrunner.TaskFailedException
@@ -30,6 +31,8 @@ class AndroidUploadStore : Task() {
             val deployTrack = buildEnvironment.getProperty(BUILD_PROP_DEPLOY_TRACK, "")
             val playStoreEmail = buildEnvironment.getProperty(BUILD_PROP_SERVICE_ACCOUNT_EMAIL, "")
             val playStoreCert = buildEnvironment.getProperty(BUILD_PROP_SERVICE_ACCOUNT_FILE, "")
+            val filenameFilters = buildEnvironment.getProperties(AndroidPropConstants.BUILD_PROP_FILENAME_FILTERS,
+                    listOf("zipaligned", "unsigned"))
 
             if ((deployTrack.isEmpty() || playStoreEmail.isEmpty() || playStoreCert.isEmpty())) {
                 val sb = StringBuilder()
@@ -47,7 +50,7 @@ class AndroidUploadStore : Task() {
 
             val filteredApks = AndroidUtil.findAllApkOutputs(buildEnvironment.projectPath)
                     .filter { file ->
-                        arrayOf("aligned", "signed", "instrumented").none { file.nameWithoutExtension.endsWith(it) }
+                        filenameFilters.none { file.nameWithoutExtension.contains(it) }
                     }
                     .map { Pair(it, ApkFile(it)) }
                     .filter { it.second.isSigned }
