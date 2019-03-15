@@ -16,7 +16,6 @@ import java.util.Collection;
 @Component
 public class AndroidUploadHockeyapp extends Task {
 
-
     public static final String TASK_UPLOAD_HOCKEYAPP = "android_upload_hockeyapp";
     public static final String BUILD_PROP_HOCKEYAPP_TOKEN = "hockappToken";
     public static final String BUILD_PROP_HOCKEYAPP_RELEASE_TAGS = "hockeyappReleaseTags";
@@ -37,7 +36,7 @@ public class AndroidUploadHockeyapp extends Task {
         // upload all the apk builds that it finds
         Collection<File> files = Util.findAllByExtension(new File(buildEnvironment.getProjectPath()), ".apk");
         for (File apk : files) {
-            String absolutPath = apk.getAbsolutePath();
+            String absolutePath = apk.getAbsolutePath();
 
             // Filtering out known bad APKs
             if(!absolutePath.contains("build/outputs") || 
