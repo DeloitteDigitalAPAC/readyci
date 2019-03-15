@@ -4,7 +4,10 @@ import com.squarepolka.readyci.configuration.AndroidPropConstants
 import com.squarepolka.readyci.configuration.ReadyCIConfiguration
 import com.squarepolka.readyci.taskrunner.BuildEnvironment
 import com.squarepolka.readyci.tasks.Task
+import com.squarepolka.readyci.tasks.app.android.extensions.isDebuggable
+import com.squarepolka.readyci.tasks.app.android.extensions.isSigned
 import com.squarepolka.readyci.util.Util
+import net.dongliu.apk.parser.ApkFile
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -25,28 +28,34 @@ class AndroidUploadHockeyapp : Task() {
         val releaseTags = buildEnvironment.getProperty(AndroidPropConstants.BUILD_PROP_HOCKEYAPP_RELEASE_TAGS, "")
         val releaseNotes = buildEnvironment.getProperty(AndroidPropConstants.BUILD_PROP_HOCKEYAPP_RELEASE_NOTES, "")
 
-        // upload all the apk builds that it finds
-        val files = Util.findAllByExtension(File(buildEnvironment.projectPath), ".apk")
-        for (apk in files) {
-            val absolutePath = apk.absolutePath
-
-            // Filtering out known bad APKs
-            if (!absolutePath.contains("build/outputs") ||
-                    absolutePath.endsWith("zipaligned.apk") ||
-                    absolutePath.endsWith("signed.apk") ||
-                    absolutePath.endsWith("uninstrumented.apk")) {
-                continue
-            }
-
-            LOGGER.warn("uploading $absolutePath")
-
-            // Upload to HockeyApp
-            executeCommand(arrayOf("/usr/bin/curl", "https://rink.hockeyapp.net/api/2/apps/upload", "-H", "X-HockeyAppToken: $hockappToken", "-F", "ipa=@$absolutePath", "-F", "notes=$releaseNotes", "-F", "tags=$releaseTags", "-F", "notes_type=0", // Textual release notes
-                    "-F", "status=2", // Make this version available for download
-                    "-F", "notify=1", // Notify users who can install the app
-                    "-F", "strategy=add", // Add the build if one with the same build number exists
-                    "-F", "mandatory=1"                 // Download is mandatory
-            ), buildEnvironment.projectPath)
+        if(hockappToken == null) {
+            throw RuntimeException("AndroidUploadStore: Missing vital details for play store deployment:\n- hockappToken is required")
         }
+
+        val filteredApks = AndroidUtil.findAllApkOutputs(buildEnvironment.projectPath)
+                .filter { file ->
+                    arrayOf("aligned", "signed", "instrumented").none { file.nameWithoutExtension.endsWith(it) }
+                }
+                .map { Pair(it, ApkFile(it)) }
+                .filter { it.second.isSigned }
+                .filter { !it.second.isDebuggable }
+
+        if (filteredApks.size != 1) {
+            throw RuntimeException("Either there's no valid APK, or too many valid APKs")
+        }
+
+        val rawFile = filteredApks.first().first
+
+        executeCommand(arrayOf("/usr/bin/curl", "https://rink.hockeyapp.net/api/2/apps/upload",
+                "-H", "X-HockeyAppToken: $hockappToken",
+                "-F", "ipa=@${rawFile.absolutePath}",
+                "-F", "notes=$releaseNotes",
+                "-F", "tags=$releaseTags",
+                "-F", "notes_type=0", // Textual release notes
+                "-F", "status=2", // Make this version available for download
+                "-F", "notify=1", // Notify users who can install the app
+                "-F", "strategy=add", // Add the build if one with the same build number exists
+                "-F", "mandatory=1" // Download is mandatory
+        ), buildEnvironment.projectPath)
     }
 }

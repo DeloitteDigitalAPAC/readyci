@@ -7,18 +7,13 @@ import com.squarepolka.readyci.taskrunner.BuildEnvironment
 import com.squarepolka.readyci.taskrunner.TaskFailedException
 import com.squarepolka.readyci.tasks.Task
 import com.squarepolka.readyci.util.android.AndroidPublisherHelper
-import com.squarepolka.readyci.util.Util
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import net.dongliu.apk.parser.ApkFile
-import net.dongliu.apk.parser.bean.ApkSignStatus
-import java.io.File
 import java.util.ArrayList
-import java.io.StringReader
-import javax.xml.parsers.DocumentBuilderFactory
-import org.w3c.dom.Element
-import org.xml.sax.InputSource
 import com.squarepolka.readyci.configuration.AndroidPropConstants.*
+import com.squarepolka.readyci.tasks.app.android.extensions.isDebuggable
+import com.squarepolka.readyci.tasks.app.android.extensions.isSigned
 
 @Component
 class AndroidUploadStore : Task() {
@@ -50,36 +45,20 @@ class AndroidUploadStore : Task() {
 
             val playStoreCertLocation = String.format("%s/%s", buildEnvironment.credentialsPath, playStoreCert)
 
-            val filteredApks = Util.findAllByExtension(File(buildEnvironment.projectPath), ".apk")
-                    .filter {
-                        val absolutePath = it.absolutePath
-
-                        absolutePath.contains("build/outputs") &&
-                                !absolutePath.endsWith("aligned.apk") &&
-                                !absolutePath.endsWith("signed.apk") &&
-                                !absolutePath.endsWith("uninstrumented.apk")
+            val filteredApks = AndroidUtil.findAllApkOutputs(buildEnvironment.projectPath)
+                    .filter { file ->
+                        arrayOf("aligned", "signed", "instrumented").none { file.nameWithoutExtension.endsWith(it) }
                     }
-                    .filter {
-                        val apk = ApkFile(it)
-                        val signStatus = apk.verifyApk()
-                        signStatus == ApkSignStatus.signed
-                    }
-                    .filter {
-                        val apk = ApkFile(it)
-
-                        val inputSource = InputSource(StringReader(apk.manifestXml))
-                        val doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(inputSource)
-                        val debuggable = (doc.getElementsByTagName("application").item(0) as Element).getAttribute("android:debuggable")
-
-                        debuggable == null || !debuggable.toBoolean()
-                    }
+                    .map { Pair(it, ApkFile(it)) }
+                    .filter { it.second.isSigned }
+                    .filter { !it.second.isDebuggable }
 
             if (filteredApks.size != 1) {
                 throw RuntimeException("Either there's no valid APK, or too many valid APKs")
             }
 
-            val rawFile = filteredApks[0]
-            val apkMetadata = ApkFile(rawFile).apkMeta
+            val rawFile = filteredApks.first().first
+            val apkMetadata = filteredApks.first().second.apkMeta
 
             // Create the API service.
             val service = AndroidPublisherHelper.init(apkMetadata.packageName, playStoreEmail, playStoreCertLocation)
@@ -88,12 +67,12 @@ class AndroidUploadStore : Task() {
             // Create a new edit to make changes to your listing.
             val editRequest = edits.insert(apkMetadata.packageName, null)
             val edit = editRequest.execute()
-            val editId = edit.id
-            LOGGER.info("AndroidUploadStore: Created edit with id: {}", editId)
+            LOGGER.info("AndroidUploadStore: Created edit with id: {}", edit.id)
+
             val apkFile = FileContent(AndroidPublisherHelper.MIME_TYPE_APK, rawFile)
             val uploadRequest = edits
                     .apks()
-                    .upload(apkMetadata.packageName, editId, apkFile)
+                    .upload(apkMetadata.packageName, edit.id, apkFile)
             val apk = uploadRequest.execute()
             LOGGER.info("AndroidUploadStore: Version code {} has been uploaded", apk.versionCode)
 
@@ -103,7 +82,7 @@ class AndroidUploadStore : Task() {
             val updateTrackRequest = edits
                     .tracks()
                     .update(apkMetadata.packageName,
-                            editId,
+                            edit.id,
                             deployTrack,
                             Track().setReleases(
                                     listOf(TrackRelease()
@@ -114,7 +93,7 @@ class AndroidUploadStore : Task() {
             LOGGER.info("AndroidUploadStore: Track {} has been updated.", updatedTrack.track)
 
             // Commit changes for edit.
-            val commitRequest = edits.commit(apkMetadata.packageName, editId)
+            val commitRequest = edits.commit(apkMetadata.packageName, edit.id)
             val appEdit = commitRequest.execute()
             LOGGER.info("AndroidUploadStore: App edit with id {} has been committed", appEdit.id)
         } catch (ex: Exception) {
