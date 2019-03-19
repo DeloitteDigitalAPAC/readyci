@@ -40,7 +40,6 @@ class AndroidUploadHockeyapp : Task() {
                 }
                 .map { Pair(it, ApkFile(it)) }
                 .filter { it.second.isSigned }
-                .filter { !it.second.isDebuggable }
 
         if (filteredApks.size != 1) {
             throw RuntimeException("Either there's no valid APK, or too many valid APKs")
