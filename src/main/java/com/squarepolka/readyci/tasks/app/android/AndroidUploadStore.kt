@@ -56,8 +56,10 @@ class AndroidUploadStore : Task() {
                     .filter { it.second.isSigned }
                     .filter { !it.second.isDebuggable }
 
-            if (filteredApks.size != 1) {
-                throw RuntimeException("Either there's no valid APK, or too many valid APKs")
+            when(filteredApks.size) {
+                0 -> throw RuntimeException("Could not find the signed APK")
+                1 -> {} // do nothing
+                else -> throw RuntimeException("There are too many valid APKs that we can upload, please provide a more specific scheme for this pipeline ")
             }
 
             val rawFile = filteredApks.first().first
