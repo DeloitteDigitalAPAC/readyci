@@ -16,9 +16,9 @@ import java.io.File
 
 @Component
 class AndroidUploadHockeyapp : Task() {
+
     companion object {
         private const val TASK_UPLOAD_HOCKEYAPP = "android_upload_hockeyapp"
-        private val LOGGER = LoggerFactory.getLogger(ReadyCIConfiguration::class.java)
     }
 
     override fun taskIdentifier(): String = TASK_UPLOAD_HOCKEYAPP
@@ -41,8 +41,10 @@ class AndroidUploadHockeyapp : Task() {
                 .map { Pair(it, ApkFile(it)) }
                 .filter { it.second.isSigned }
 
-        if (filteredApks.size != 1) {
-            throw RuntimeException("Either there's no valid APK, or too many valid APKs")
+        when(filteredApks.size) {
+            0 -> throw RuntimeException("Could not find the signed APK")
+            1 -> {} // do nothing
+            else -> throw RuntimeException("There are too many valid APKs that we can upload, please provide a more specific scheme for this pipeline ")
         }
 
         val rawFile = filteredApks.first().first
