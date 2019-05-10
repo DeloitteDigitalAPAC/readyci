@@ -29,6 +29,8 @@ public class AndroidSignApp extends Task {
         String scheme = buildEnvironment.getProperty(BUILD_PROP_SCHEME);
         String keystorePath = buildEnvironment.getProperty(BUILD_PROP_JAVA_KEYSTORE_PATH);
         String storePass = buildEnvironment.getProperty(BUILD_PROP_STOREPASS);
+
+        // TODO: these are likely to be incorrect
         String unsignedApkPath = String.format("%s/app/build/outputs/apk/%s/app-%s-unsigned.apk", buildEnvironment.getProjectPath(), scheme.toLowerCase(), scheme.toLowerCase());
         String signedApkPath = String.format("%s/app/build/outputs/apk/%s/app-%s.apk", buildEnvironment.getProjectPath(), scheme.toLowerCase(), scheme.toLowerCase());
 

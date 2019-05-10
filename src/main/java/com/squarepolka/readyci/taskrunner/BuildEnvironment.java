@@ -76,6 +76,20 @@ public class BuildEnvironment {
     }
 
     /**
+     * Fetch a list of environment properties
+     * @param propertyName
+     * @return list of String property values
+     * @throws PropertyMissingException if the property does not exist
+     */
+    public List<String> getProperties(String propertyName, List<String> defaultValues) {
+        List<String> values = (List<String>) buildParameters.get(propertyName);
+        if (null == values || values.isEmpty()) {
+            return defaultValues;
+        }
+        return values;
+    }
+
+    /**
      * Fetch a single environment property
      * @param propertyName
      * @return a single String property value
