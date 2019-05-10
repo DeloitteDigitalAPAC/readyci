@@ -11,9 +11,11 @@ public class ProvisioningProfile {
         this.hasProvisionedDevices = hasProvisionedDevices;
     }
 
-    public String provisioningType() {
+    public String provisioningType(String fullBundleId) {
         if (hasProvisionedDevices) {
             return "ad-hoc";
+        } else if (fullBundleId.endsWith("*")){
+            return "enterprise";
         } else {
             return "app-store";
         }

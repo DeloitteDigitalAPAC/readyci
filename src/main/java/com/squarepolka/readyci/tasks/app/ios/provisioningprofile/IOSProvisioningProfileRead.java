@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 
@@ -29,8 +30,8 @@ public class IOSProvisioningProfileRead extends Task {
     }
 
     public void performTask(BuildEnvironment buildEnvironment) throws TaskFailedException {
-        List<String> relativeProfilePaths = buildEnvironment.getProperties(BUILD_PROP_PROFILE_PATHS);
-        for (String relativeProfilePath : relativeProfilePaths) {
+        List<LinkedHashMap<String, String>> relativeProfilePaths = buildEnvironment.getListOfHashMaps(BUILD_PROP_PROFILE_PATHS);
+        for (LinkedHashMap<String, String> relativeProfilePath : relativeProfilePaths) {
             readProfile(relativeProfilePath, buildEnvironment);
         }
 
@@ -40,11 +41,11 @@ public class IOSProvisioningProfileRead extends Task {
                 buildEnvironment.getProperty(BUILD_PROP_DEV_TEAM));
     }
 
-    public void readProfile(String relativeProfilePath, BuildEnvironment buildEnvironment) throws TaskFailedException {
-        String profilePath = String.format("%s/%s", buildEnvironment.getProjectPath(), relativeProfilePath);
+    public void readProfile(LinkedHashMap<String, String> relativeProfilePath, BuildEnvironment buildEnvironment) throws TaskFailedException {
+        String profilePath = String.format("%s/%s", buildEnvironment.getProjectPath(), relativeProfilePath.get("profilePath"));
         InputStream provisioningFileInputStream = decryptProvisioningFile(profilePath);
         try {
-            readProvisioningInputStream(provisioningFileInputStream, buildEnvironment);
+            readProvisioningInputStream(provisioningFileInputStream, buildEnvironment, relativeProfilePath.get("bundleId"));
         } catch (Exception e) {
             throw new TaskFailedException(e.getMessage());
         }
@@ -55,34 +56,30 @@ public class IOSProvisioningProfileRead extends Task {
         return executeCommand(new String[] {"/usr/bin/security", "cms", "-D", "-i", profilePath});
     }
 
-    private void readProvisioningInputStream(InputStream processInputSteam, BuildEnvironment buildEnvironment) throws Exception {
+    private void readProvisioningInputStream(InputStream processInputSteam, BuildEnvironment buildEnvironment, String bundleId) throws Exception {
         NSDictionary rootDict = (NSDictionary) PropertyListParser.parse(processInputSteam);
         String appIDName = rootDict.objectForKey(BUILD_PROP_APP_ID_NAME).toString();
         String organisationName = rootDict.objectForKey("TeamName").toString();
         NSArray appIdPrefixs = (NSArray) rootDict.objectForKey("ApplicationIdentifierPrefix");
         String devTeam = appIdPrefixs.lastObject().toString();
-        ProvisioningProfile profile = extractProvisioningProfile(rootDict, devTeam);
+        ProvisioningProfile profile = extractProvisioningProfile(rootDict, bundleId);
 
         buildEnvironment.addProperty(BUILD_PROP_APP_ID_NAME, appIDName);
         buildEnvironment.addProperty(BUILD_PROP_ORGANISATION_NAME, organisationName);
         buildEnvironment.addProperty(BUILD_PROP_DEV_TEAM, devTeam);
-        buildEnvironment.addProperty(BUILD_PROP_PROVISIONING_METHOD, profile.provisioningType());
+
+        NSDictionary entitlementsDict = (NSDictionary) rootDict.objectForKey("Entitlements");
+        String fullBundleId = entitlementsDict.objectForKey("application-identifier").toString();
+        buildEnvironment.addProperty(BUILD_PROP_PROVISIONING_METHOD, profile.provisioningType(fullBundleId));
+
         buildEnvironment.addObject(BUILD_PROP_IOS_PROFILES, profile);
     }
 
-    private ProvisioningProfile extractProvisioningProfile(NSDictionary rootDict, String devTeam) {
+    private ProvisioningProfile extractProvisioningProfile(NSDictionary rootDict, String bundleId) {
         String provisioningProfileName = rootDict.objectForKey("Name").toString();
-        NSDictionary entitlementsDict = (NSDictionary) rootDict.objectForKey("Entitlements");
-        String fullBundleId = entitlementsDict.objectForKey("application-identifier").toString();
-        String bundleId = removeTeamFromBundleId(fullBundleId, devTeam);
         NSObject provisionedDevices = rootDict.objectForKey("ProvisionedDevices");
         boolean hasProvisionedDevices = provisionedDevices != null;
-        ProvisioningProfile profile = new ProvisioningProfile(provisioningProfileName, bundleId, hasProvisionedDevices);
-        return profile;
-    }
-
-    private String removeTeamFromBundleId(String bundleId, String teamId) {
-        return bundleId.replace(String.format("%s.", teamId), "");
+        return new ProvisioningProfile(provisioningProfileName, bundleId, hasProvisionedDevices);
     }
 
 }

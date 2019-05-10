@@ -1,5 +1,6 @@
 package com.squarepolka.readyci.taskrunner;
 
+import com.squarepolka.readyci.exceptions.TaskExitException;
 import com.squarepolka.readyci.tasks.Task;
 import com.squarepolka.readyci.tasks.readyci.TaskExecuteException;
 import com.squarepolka.readyci.util.time.TaskTimer;
@@ -51,7 +52,11 @@ public class TaskRunner {
             runTaskList(configuredTasks);
             runTaskList(defaultPostTasks);
             LOGGER.info("COMPLETED\tBUILD\t{}\t({})", buildEnvironment.getPipelineName(), buildEnvironment.getBuildUUID());
-        } catch (RuntimeException e) {
+        }
+        catch (TaskExitException e) {
+            LOGGER.info("EXITED\tBUILD\t{}\t({})\t{}", buildEnvironment.getPipelineName(), buildEnvironment.getBuildUUID(), e.getMessage());
+        }
+        catch (RuntimeException e) {
             LOGGER.info("FAILED\tBUILD\t{}\t({})", buildEnvironment.getPipelineName(), buildEnvironment.getBuildUUID());
             throw e;
         }
@@ -63,19 +68,19 @@ public class TaskRunner {
         }
     }
 
-    private void runTaskList(List<Task> tasks) {
+    private void runTaskList(List<Task> tasks) throws TaskExitException {
         for (Task task : tasks) {
             try {
                 task.setTaskRunner(this);
                 runTask(task);
                 task.setTaskRunner(null);
-            } catch (Exception e) {
+            } catch (TaskFailedException e) {
                 handleTaskFailure(task, e);
             }
         }
     }
 
-    private void runTask(Task task) throws TaskFailedException {
+    private void runTask(Task task) throws TaskFailedException, TaskExitException {
         LOGGER.info("RUNNING\tTASK\t{}", task.taskIdentifier());
         TaskTimer taskTimer = TaskTimer.newStartedTimer();
         task.performTask(buildEnvironment);

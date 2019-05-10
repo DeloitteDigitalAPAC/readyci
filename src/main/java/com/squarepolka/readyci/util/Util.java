@@ -2,9 +2,7 @@ package com.squarepolka.readyci.util;
 
 import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
 
 @Component
@@ -33,6 +31,8 @@ public class Util {
         // If all else, return an empty string
         return "";
     }
+
+
 
     public static Collection<File> findAllByExtension(File dir, String extension) {
         Set<File> fileTree = new HashSet<File>();
@@ -71,6 +71,17 @@ public class Util {
 
     public static boolean valueExists(String string) {
         return string.length() > 0;
+    }
+
+    public static String readInputStream(InputStream inputStream) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        InputStreamReader processStreamReader = new InputStreamReader(inputStream);
+        BufferedReader processOutputStream = new BufferedReader(processStreamReader);
+        String processOutputLine;
+        while (processOutputStream.ready() && (processOutputLine = processOutputStream.readLine()) != null) {
+            sb.append(processOutputLine + "\n");
+        }
+        return sb.toString();
     }
 
     /**

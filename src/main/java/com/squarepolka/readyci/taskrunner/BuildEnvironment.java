@@ -175,6 +175,20 @@ public class BuildEnvironment {
     }
 
     /**
+     * Fetch a list of environment properties
+     * @param propertyName
+     * @return list of LinkedHashMap<String, String> property values
+     * @throws PropertyMissingException if the property does not exist
+     */
+    public List<LinkedHashMap<String, String>> getListOfHashMaps(String propertyName) {
+        List<LinkedHashMap<String, String>> values = (List<LinkedHashMap<String, String>>) buildParameters.get(propertyName);
+        if (null == values || values.isEmpty()) {
+            throw new PropertyMissingException(propertyName);
+        }
+        return values;
+    }
+
+    /**
      * This method copies the pipeline build parameters loaded from the yml file into the
      * buildParameters object. It needs to do type checking and store strings within List<String>
      * so that we can support both String and List<String> values.

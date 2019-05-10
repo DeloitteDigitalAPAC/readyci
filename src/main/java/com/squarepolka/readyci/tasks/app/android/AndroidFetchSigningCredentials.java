@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.io.FilenameFilter;
 
 
 @Component
@@ -53,7 +54,12 @@ public class AndroidFetchSigningCredentials extends Task {
 
 
         // read in the .build_credentials/*.yml files
-        File[] files = new File(buildEnvironment.getCredentialsPath()).listFiles((dir, name) -> name.endsWith(".yml"));
+        File[] files = new File(buildEnvironment.getCredentialsPath()).listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.endsWith(".yml");
+            }
+        });
 
         if(files != null && files.length > 0) {
             for (File file : files) { // load and add to the configuration

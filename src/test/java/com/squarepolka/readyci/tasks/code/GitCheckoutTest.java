@@ -1,5 +1,6 @@
 package com.squarepolka.readyci.tasks.code;
 
+import com.squarepolka.readyci.exceptions.TaskExitException;
 import com.squarepolka.readyci.taskrunner.BuildEnvironment;
 import com.squarepolka.readyci.tasks.readyci.TaskCommandHandler;
 import com.squarepolka.readyci.util.PropertyMissingException;
@@ -53,7 +54,7 @@ public class GitCheckoutTest {
     }
 
     @Test
-    public void testGitCheckoutWithConfiguredGitPathAndBranchName() {
+    public void testGitCheckoutWithConfiguredGitPathAndBranchName() throws TaskExitException {
         List<String> expectedCommand = new ArrayList<>();
         expectedCommand.add(COMMAND_GIT);
         expectedCommand.add(PARAM_CLONE);
@@ -71,7 +72,7 @@ public class GitCheckoutTest {
     }
 
     @Test
-    public void testGitCheckoutWithConfiguredGitPathAndNoBranchName() {
+    public void testGitCheckoutWithConfiguredGitPathAndNoBranchName() throws TaskExitException {
         List<String> expectedCommand = new ArrayList<>();
         expectedCommand.add(COMMAND_GIT);
         expectedCommand.add(PARAM_CLONE);
@@ -88,7 +89,7 @@ public class GitCheckoutTest {
     }
 
     @Test
-    public void testGitCheckoutWithNoGitPathAndNoBranchName() {
+    public void testGitCheckoutWithNoGitPathAndNoBranchName() throws TaskExitException {
         List<String> expectedCommand = new ArrayList<>();
         expectedCommand.add(COMMAND_GIT);
         expectedCommand.add(PARAM_BRANCH);

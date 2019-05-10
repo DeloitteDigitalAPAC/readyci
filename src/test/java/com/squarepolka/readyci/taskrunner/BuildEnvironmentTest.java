@@ -150,9 +150,9 @@ public class BuildEnvironmentTest {
         testStringList.add("string2");
         testStringList.add("string3");
 
-        Map.Entry<String, Object> stringEntry = new AbstractMap.SimpleEntry<>(TEST_KEY_STRING, TEST_VALUE_STRING);
-        Map.Entry<String, Object> stringListEntry = new AbstractMap.SimpleEntry<>(TEST_KEY_STRING_LIST, testStringList);
-        Map.Entry<String, Object> booleanEntry = new AbstractMap.SimpleEntry<>(TEST_KEY_BOOLEAN, TEST_VALUE_BOOLEAN_TRUE);
+        Map.Entry<String, Object> stringEntry = new AbstractMap.SimpleEntry<String, Object>(TEST_KEY_STRING, TEST_VALUE_STRING);
+        Map.Entry<String, Object> stringListEntry = new AbstractMap.SimpleEntry<String, Object>(TEST_KEY_STRING_LIST, testStringList);
+        Map.Entry<String, Object> booleanEntry = new AbstractMap.SimpleEntry<String, Object>(TEST_KEY_BOOLEAN, TEST_VALUE_BOOLEAN_TRUE);
 
         Set<Map.Entry<String, Object>> set = new HashSet<>();
         set.add(stringEntry);
