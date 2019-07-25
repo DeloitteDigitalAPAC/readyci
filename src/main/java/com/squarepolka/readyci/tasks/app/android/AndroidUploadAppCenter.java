@@ -29,8 +29,6 @@ public class AndroidUploadAppCenter extends Task {
     public static final String BUILD_PROP_APPCENTER_RELEASE_TAGS = "appcenterReleaseTags";
     public static final String BUILD_PROP_APPCENTER_RELEASE_NOTES = "appcenterReleaseNotes";
 
-    private static final String COMMAND_GIT = "/usr/bin/git";
-
     private static final Logger LOGGER = LoggerFactory.getLogger(ReadyCIConfiguration.class);
 
     @Override
@@ -47,14 +45,11 @@ public class AndroidUploadAppCenter extends Task {
         String appName = buildEnvironment.getProperty(BUILD_PROP_APPCENTER_APPNAME, "");
         String releaseNotes = buildEnvironment.getProperty(BUILD_PROP_APPCENTER_RELEASE_NOTES, "");
 
-        if(releaseNotes.isEmpty()) {
-            releaseNotes = readOutput(new String[]{COMMAND_GIT, "log", "-1", "--pretty=%B"}, buildEnvironment);
-        }
-
         AppCenterHelper helper = new AppCenterHelper(token, appOwner, appName);
 
         // upload all the apk builds that it finds
         Collection<File> files = Util.findAllByExtension(new File(buildEnvironment.getProjectPath()), ".apk");
+
         for (File apk : files) {
             if(apk.getAbsolutePath().contains("build")) {
                 LOGGER.warn("uploading "+ apk.getAbsolutePath());
@@ -71,20 +66,8 @@ public class AndroidUploadAppCenter extends Task {
                         LOGGER.info("Build #"+result.getReleaseID()+" released to "+ releaseTags);
                     }
                 }
+                return;
             }
         }
-
     }
-
-
-    private String readOutput(String[] command, BuildEnvironment buildEnvironment) {
-        InputStream inputStream = executeCommand(command, buildEnvironment.getProjectPath());
-        try {
-            return Util.readInputStream(inputStream);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return "";
-    }
-
 }
