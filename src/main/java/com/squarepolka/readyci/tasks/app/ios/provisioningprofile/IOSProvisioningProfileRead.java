@@ -60,7 +60,7 @@ public class IOSProvisioningProfileRead extends Task {
         NSDictionary rootDict = (NSDictionary) PropertyListParser.parse(processInputSteam);
         String appIDName = rootDict.objectForKey(BUILD_PROP_APP_ID_NAME).toString();
         String organisationName = rootDict.objectForKey("TeamName").toString();
-        NSArray appIdPrefixs = (NSArray) rootDict.objectForKey("ApplicationIdentifierPrefix");
+        NSArray appIdPrefixs = (NSArray) rootDict.objectForKey("TeamIdentifier");
         String devTeam = appIdPrefixs.lastObject().toString();
         ProvisioningProfile profile = extractProvisioningProfile(rootDict, bundleId);
 
