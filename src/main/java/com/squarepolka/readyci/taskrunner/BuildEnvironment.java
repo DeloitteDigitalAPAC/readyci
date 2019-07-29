@@ -215,7 +215,7 @@ public class BuildEnvironment {
     public void getCredentialsPathFromConfiguration(PipelineConfiguration configuration) {
         this.credentialsPath = (configuration.hasParameter(PipelineConfiguration.PIPELINE_CREDENTIALS_PATH)) ? 
             (String) configuration.getParameter(PipelineConfiguration.PIPELINE_CREDENTIALS_PATH) : 
-            String.format("%s./build_credentials", this.codePath);
+            String.format("%s/build_credentials", this.codePath);
     }
 
     public void configureProjectPath() {
