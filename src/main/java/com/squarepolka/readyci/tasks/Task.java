@@ -2,7 +2,6 @@ package com.squarepolka.readyci.tasks;
 
 import com.squarepolka.readyci.exceptions.TaskExitException;
 import com.squarepolka.readyci.taskrunner.BuildEnvironment;
-import com.squarepolka.readyci.taskrunner.TaskFailedException;
 import com.squarepolka.readyci.taskrunner.TaskRunner;
 import com.squarepolka.readyci.tasks.readyci.TaskCommand;
 import com.squarepolka.readyci.tasks.readyci.TaskCommandHandler;
@@ -44,7 +43,7 @@ public abstract class Task {
 
     // Methods that must be implemented by subclasses
     public abstract String taskIdentifier();
-    public abstract void performTask(BuildEnvironment buildEnvironment) throws TaskFailedException, TaskExitException;
+    public abstract void performTask(BuildEnvironment buildEnvironment) throws TaskExitException;
 
     // Getters and Setters
     public void setTaskRunner(TaskRunner taskRunner) {

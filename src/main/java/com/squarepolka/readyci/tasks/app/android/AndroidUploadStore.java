@@ -59,7 +59,7 @@ public class AndroidUploadStore extends Task {
                 if(playStoreCert.isEmpty())
                     sb.append("\n- playStoreCert is required");
 
-                throw new Exception(sb.toString());
+                throw new TaskFailedException(sb.toString());
             }
 
             String playStoreCertLocation = String.format("%s/%s", buildEnvironment.getCredentialsPath(), playStoreCert);
@@ -91,7 +91,7 @@ public class AndroidUploadStore extends Task {
 
 
             // Assign apk to alpha track.
-            List<Long> apkVersionCodes = new ArrayList<Long>();
+            List<Long> apkVersionCodes = new ArrayList<>();
             apkVersionCodes.add(Long.valueOf(apk.getVersionCode()));
             AndroidPublisher.Edits.Tracks.Update updateTrackRequest = edits
                     .tracks()

@@ -80,7 +80,7 @@ public class TaskRunner {
         }
     }
 
-    private void runTask(Task task) throws TaskFailedException, TaskExitException {
+    private void runTask(Task task) throws TaskExitException {
         LOGGER.info("RUNNING\tTASK\t{}", task.taskIdentifier());
         TaskTimer taskTimer = TaskTimer.newStartedTimer();
         task.performTask(buildEnvironment);

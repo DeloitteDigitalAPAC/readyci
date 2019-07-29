@@ -7,8 +7,13 @@ import com.squarepolka.readyci.tasks.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -41,7 +46,7 @@ public class IOSProvisioningProfileRead extends Task {
                 buildEnvironment.getProperty(BUILD_PROP_DEV_TEAM));
     }
 
-    public void readProfile(LinkedHashMap<String, String> relativeProfilePath, BuildEnvironment buildEnvironment) throws TaskFailedException {
+    public void readProfile(HashMap<String, String> relativeProfilePath, BuildEnvironment buildEnvironment) throws TaskFailedException {
         String profilePath = String.format("%s/%s", buildEnvironment.getProjectPath(), relativeProfilePath.get("profilePath"));
         InputStream provisioningFileInputStream = decryptProvisioningFile(profilePath);
         try {
@@ -56,7 +61,10 @@ public class IOSProvisioningProfileRead extends Task {
         return executeCommand(new String[] {"/usr/bin/security", "cms", "-D", "-i", profilePath});
     }
 
-    private void readProvisioningInputStream(InputStream processInputSteam, BuildEnvironment buildEnvironment, String bundleId) throws Exception {
+
+    // Note from Jimmy: Generic exception should not be thrown, thus I imported specific exceptions that can be thrown by PropertyListParser class.
+    private void readProvisioningInputStream(InputStream processInputSteam, BuildEnvironment buildEnvironment, String bundleId) throws
+            IOException, PropertyListFormatException, ParseException, ParserConfigurationException, SAXException {
         NSDictionary rootDict = (NSDictionary) PropertyListParser.parse(processInputSteam);
         String appIDName = rootDict.objectForKey(BUILD_PROP_APP_ID_NAME).toString();
         String organisationName = rootDict.objectForKey("TeamName").toString();
