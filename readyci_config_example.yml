@@ -15,7 +15,7 @@ pipelines:
   parameters:
     gitPath: https://github.com/DeloitteDigitalAPAC/readyci.git # The GIT url you wish to pull. This is not required if a CI server is pulling your code.
     gitBranch: master # The branch you wish to pull. This is not required if a CI server is pulling your code.
-    deploySrcPath: target/readyci-0.6.5.jar # The path to the build binary.
+    deploySrcPath: target/readyci-0.6.6.jar # The path to the build binary.
     deployDstPath: /tmp/ # The path to the destination binary.
 
   tasks:

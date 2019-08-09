@@ -19,6 +19,6 @@ public class IOSDependenciesCarthage extends Task {
 
     @Override
     public void performTask(BuildEnvironment buildEnvironment) {
-        executeCommand(new String[] {"/usr/local/bin/carthage", "update", "--platform iOS"}, buildEnvironment.getProjectPath());
+        executeCommand(new String[] {"/usr/local/bin/carthage", "update", "--platform", "iOS"}, buildEnvironment.getProjectPath());
     }
 }
