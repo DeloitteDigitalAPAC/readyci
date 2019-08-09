@@ -7,9 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
-public class IOSDependenciesCarthage extends Task {
+public class IOSCarthageUpdate extends Task {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(IOSDependenciesCarthage.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(IOSCarthageUpdate.class);
     public static final String TASK_IOS_CARTHAGE_UPDATE = "ios_carthage_update";
 
     @Override
