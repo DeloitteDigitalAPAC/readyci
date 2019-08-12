@@ -5,14 +5,15 @@ import java.io.FilenameFilter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import com.squarepolka.readyci.configuration.PipelineConfiguration;
 import com.squarepolka.readyci.configuration.ReadyCIConfiguration;
-import com.squarepolka.readyci.exceptions.TaskExitException;
 import com.squarepolka.readyci.taskrunner.BuildEnvironment;
 import com.squarepolka.readyci.taskrunner.TaskFailedException;
 import com.squarepolka.readyci.tasks.Task;
 
+@Component
 public class IOSFetchSigningCredentials extends Task {
 
 	public static final String TASK_FETCH_BUILD_DEPENDENCIES = "ios_fetch_build_credentials";
