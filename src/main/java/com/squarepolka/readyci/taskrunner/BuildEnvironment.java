@@ -160,6 +160,20 @@ public class BuildEnvironment {
             return switchValue.booleanValue();
         }
     }
+    
+    /**
+     * Fetch a configured boolean value, specifying a default if the switch value does not exist
+     * @param switchName
+     * @param defaultValue
+     * @return The boolean value of the switch or defaultValue if the switch does not exist
+     */
+    public boolean getSwitch(String switchName, boolean defaultValue) {
+    	try {
+            return getSwitch(switchName);
+        } catch (PropertyMissingException e) {
+            return defaultValue;
+        }
+	}
 
     /**
      * Fetch a list of environment properties
