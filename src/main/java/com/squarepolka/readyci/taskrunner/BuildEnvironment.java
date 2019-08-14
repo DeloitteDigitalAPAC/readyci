@@ -174,6 +174,20 @@ public class BuildEnvironment {
             return defaultValue;
         }
 	}
+    
+    /**
+     * Check existence of environment property
+     * @param propertyName
+     * @return true if property does exist or false if the property does not exist
+     */
+    public boolean propertyExists(String propertyName) {
+        try {
+        	getProperty(propertyName);
+            return true;
+        } catch (PropertyMissingException e) {
+            return false;
+        }
+    }
 
     /**
      * Fetch a list of environment properties
