@@ -160,6 +160,34 @@ public class BuildEnvironment {
             return switchValue.booleanValue();
         }
     }
+    
+    /**
+     * Fetch a configured boolean value, specifying a default if the switch value does not exist
+     * @param switchName
+     * @param defaultValue
+     * @return The boolean value of the switch or defaultValue if the switch does not exist
+     */
+    public boolean getSwitch(String switchName, boolean defaultValue) {
+    	try {
+            return getSwitch(switchName);
+        } catch (PropertyMissingException e) {
+            return defaultValue;
+        }
+	}
+    
+    /**
+     * Check existence of environment property
+     * @param propertyName
+     * @return true if property does exist or false if the property does not exist
+     */
+    public boolean propertyExists(String propertyName) {
+        try {
+        	getProperty(propertyName);
+            return true;
+        } catch (PropertyMissingException e) {
+            return false;
+        }
+    }
 
     /**
      * Fetch a list of environment properties
@@ -239,7 +267,7 @@ public class BuildEnvironment {
     }
 
     public String resolveEnvironmentVariable(String propertyValue, String propertyName) {
-        if (isValueAVarible(propertyValue)) {
+        if (isValueAVariable(propertyValue)) {
             try {
                 String environmentVariableName = getNameFromEnvironmentVariable(propertyValue);
                 String environmentValue = System.getenv(environmentVariableName);
@@ -261,7 +289,7 @@ public class BuildEnvironment {
      * @param propertyValue - a string value or environment variable placeholder
      * @return the environment variable value, or the configured value if the environment variable doesn't exist.
     */
-    public boolean isValueAVarible(String propertyValue) {
+    public boolean isValueAVariable(String propertyValue) {
         return propertyValue.matches("^\\$\\{[a-zA-Z]+}");
     }
 

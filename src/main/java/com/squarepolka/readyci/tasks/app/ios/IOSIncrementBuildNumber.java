@@ -36,8 +36,7 @@ public class IOSIncrementBuildNumber extends Task {
         try {
             String infoPlistPath = String.format("%s/%s", codePath, relativepListPath);
             NSDictionary infoDict = getInfoPlistDict(infoPlistPath);
-            Integer buildNumber = getCurrentBuildNumber(infoDict);
-            buildNumber = new Integer(buildNumber.intValue() + 1);
+            Integer buildNumber = getCurrentBuildNumber(infoDict) + 1;
             updateNewBuildNumber(infoDict, infoPlistPath, buildNumber);
         } catch (Exception e) {
             throw new TaskFailedException(e.getMessage());
@@ -51,7 +50,7 @@ public class IOSIncrementBuildNumber extends Task {
 
     private Integer getCurrentBuildNumber(NSDictionary infoDict) {
         String buildNumberStr = infoDict.objectForKey(CFBUNDLEVERSION).toString();
-        Integer buildNumber = new Integer(buildNumberStr);
+        Integer buildNumber = Integer.valueOf(buildNumberStr);
         return buildNumber;
     }
 

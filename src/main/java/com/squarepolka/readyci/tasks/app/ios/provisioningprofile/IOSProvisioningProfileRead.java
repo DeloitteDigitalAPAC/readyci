@@ -26,6 +26,7 @@ public class IOSProvisioningProfileRead extends Task {
     public static final String BUILD_PROP_IOS_PROFILES = "provisioningProfileName";
     public static final String BUILD_PROP_APP_ID_NAME = "AppIDName";
     public static final String BUILD_PROP_ORGANISATION_NAME = "organisationName";
+    public static final String BUILD_PROP_PROFILE_NAME = "profileName";
     public static final String BUILD_PROP_DEV_TEAM = "devTeam";
     public static final String BUILD_PROP_PROVISIONING_METHOD = "iosProvisioningMethod";
     public static final String BUILD_PROP_PROFILE_PATHS = "iosProfiles";
@@ -40,10 +41,11 @@ public class IOSProvisioningProfileRead extends Task {
             readProfile(relativeProfilePath, buildEnvironment);
         }
 
-        LOGGER.info("BUILDING\tiOS app\t{} for {} in team {}",
+        LOGGER.info("BUILDING\tiOS app\t{} for {} in team {} using profile {}",
                 buildEnvironment.getProperty(BUILD_PROP_APP_ID_NAME),
                 buildEnvironment.getProperty(BUILD_PROP_ORGANISATION_NAME),
-                buildEnvironment.getProperty(BUILD_PROP_DEV_TEAM));
+                buildEnvironment.getProperty(BUILD_PROP_DEV_TEAM),
+                buildEnvironment.getProperty(BUILD_PROP_PROFILE_NAME));
     }
 
     public void readProfile(HashMap<String, String> relativeProfilePath, BuildEnvironment buildEnvironment) throws TaskFailedException {
@@ -74,6 +76,7 @@ public class IOSProvisioningProfileRead extends Task {
 
         buildEnvironment.addProperty(BUILD_PROP_APP_ID_NAME, appIDName);
         buildEnvironment.addProperty(BUILD_PROP_ORGANISATION_NAME, organisationName);
+        buildEnvironment.addProperty(BUILD_PROP_PROFILE_NAME, profile.getName());
         buildEnvironment.addProperty(BUILD_PROP_DEV_TEAM, devTeam);
 
         NSDictionary entitlementsDict = (NSDictionary) rootDict.objectForKey("Entitlements");
