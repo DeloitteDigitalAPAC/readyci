@@ -267,7 +267,7 @@ public class BuildEnvironment {
     }
 
     public String resolveEnvironmentVariable(String propertyValue, String propertyName) {
-        if (isValueAVarible(propertyValue)) {
+        if (isValueAVariable(propertyValue)) {
             try {
                 String environmentVariableName = getNameFromEnvironmentVariable(propertyValue);
                 String environmentValue = System.getenv(environmentVariableName);
@@ -289,7 +289,7 @@ public class BuildEnvironment {
      * @param propertyValue - a string value or environment variable placeholder
      * @return the environment variable value, or the configured value if the environment variable doesn't exist.
     */
-    public boolean isValueAVarible(String propertyValue) {
+    public boolean isValueAVariable(String propertyValue) {
         return propertyValue.matches("^\\$\\{[a-zA-Z]+}");
     }
 

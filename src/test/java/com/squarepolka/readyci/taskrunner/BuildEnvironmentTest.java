@@ -206,14 +206,14 @@ public class BuildEnvironmentTest {
     }
 
     @Test
-    public void isValueAVaribleFalse() {
-        boolean result = subject.isValueAVarible("notAVar");
+    public void isValueAVariableFalse() {
+        boolean result = subject.isValueAVariable("notAVar");
         assertEquals("The parameter is classed as not a variable", false, result);
     }
 
     @Test
-    public void isValueAVaribleTrue() {
-        boolean result = subject.isValueAVarible("${isAVar}");
+    public void isValueAVariableTrue() {
+        boolean result = subject.isValueAVariable("${isAVar}");
         assertEquals("The parameter is classed as a variable", true, result);
     }
 
